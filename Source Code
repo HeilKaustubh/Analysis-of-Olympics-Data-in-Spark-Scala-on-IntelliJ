@@ -1,0 +1,29 @@
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.{SparkConf, SparkContext}
+object ReadNJson {
+  System.setProperty("hadoop.home.dir", "C:\\xx\\yy\\zz\\Hadoop\\")
+
+  def main(args: Array[String]): Unit = {
+    var conf = new SparkConf().setAppName("Read CSV File").setMaster("local[*]")
+    val sc = new SparkContext(conf)
+    val sqlContext = new SQLContext(sc)
+
+
+    val textFile = sc.textFile("C:\\xx\\yy\\zz\\olympix_data.csv")
+    val counts = textFile.filter { x => {
+      if (x.toString().split("\t").length >= 10) true else false
+    }
+    }.map(line => {
+      line.toString().split("\t")
+    })
+    val fil = counts.filter(x => {
+      if (x(5).equalsIgnoreCase("swimming") && (x(9).matches(("\\d+")))) true else false
+    })
+    val jil = fil.map(x => (x(2), x(9).toInt))
+    val pairs: RDD[(String, Int)] = jil
+    val cnt = pairs.reduceByKey(_ + _)
+    cnt.saveAsTextFile("C:\\xx\\yy\\zz\\spark practise101")
+    // Spark practise101 is not a real folder but I have used it so that output gets stored within it. This folder will automatically be created
+  }
+}
